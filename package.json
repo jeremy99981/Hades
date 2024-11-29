@@ -15,6 +15,7 @@
     "colorthief": "^2.6.0",
     "framer-motion": "^11.11.17",
     "next": "14.0.3",
+    "pocketbase": "^0.22.1",
     "react": "^18",
     "react-dom": "^18"
   },

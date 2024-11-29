@@ -162,47 +162,53 @@ function Home() {
                 className="relative p-[2px] rounded-[10px] overflow-hidden group/item flex-shrink-0"
                 style={{ width: '250px' }}
               >
-                <Link
-                  href={`/tv/${show.id}`}
-                  className="relative overflow-hidden rounded-[10px] transition-transform duration-300 ease-out group-hover/item:scale-[1.02] aspect-[2/3] block"
-                >
-                  <Image
-                    src={getImageUrl(show.poster_path, 'w500')}
-                    alt={show.name}
-                    fill
-                    className="object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-0 transition-opacity duration-300 group-hover/item:opacity-100">
-                    <div className="absolute bottom-0 left-0 right-0 p-6">
-                      <div className="flex items-center space-x-2 text-[13px] text-white/90">
-                        <span className="flex items-center">
-                          <span className="text-yellow-400 mr-1">★</span>
-                          {show.vote_average.toFixed(1)}
-                        </span>
-                        <span>•</span>
-                        <span>{show.first_air_date?.split('-')[0]}</span>
-                      </div>
-                      <h3 className="font-semibold text-xl leading-tight text-white mt-2">
-                        {show.name}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-4">
-                        <Link
-                          href={`/tv/${show.id}`}
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-md text-black text-sm font-medium transition-colors duration-200"
-                        >
-                          <PlayIcon className="w-4 h-4" />
-                          Lecture
-                        </Link>
-                        <button 
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/75 hover:bg-gray-800/90 rounded-md text-white text-sm font-medium transition-colors duration-200 whitespace-nowrap"
-                        >
-                          <PlusIcon className="w-4 h-4" />
-                          Ma Liste
-                        </button>
+                <div className="relative overflow-hidden rounded-[10px] transition-transform duration-300 ease-out group-hover/item:scale-[1.02] aspect-[2/3] block">
+                  <Link href={`/tv/${show.id}`}>
+                    <Image
+                      src={getImageUrl(show.poster_path, 'w500')}
+                      alt={show.name}
+                      fill
+                      className="object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-0 transition-opacity duration-300 group-hover/item:opacity-100">
+                      <div className="absolute bottom-0 left-0 right-0 p-6">
+                        <div className="flex items-center space-x-2 text-[13px] text-white/90">
+                          <span className="flex items-center">
+                            <span className="text-yellow-400 mr-1">★</span>
+                            {show.vote_average.toFixed(1)}
+                          </span>
+                          <span>•</span>
+                          <span>{show.first_air_date?.split('-')[0]}</span>
+                        </div>
+                        <h3 className="font-semibold text-xl leading-tight text-white mt-2">
+                          {show.name}
+                        </h3>
+                        <div className="flex items-center gap-3 mt-4">
+                          <button 
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-md text-black text-sm font-medium transition-colors duration-200"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Ajouter ici la logique pour lancer la lecture
+                            }}
+                          >
+                            <PlayIcon className="w-4 h-4" />
+                            Lecture
+                          </button>
+                          <button 
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/75 hover:bg-gray-800/90 rounded-md text-white text-sm font-medium transition-colors duration-200 whitespace-nowrap"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              // Ajouter ici la logique pour ajouter à la liste
+                            }}
+                          >
+                            <PlusIcon className="w-4 h-4" />
+                            Ma Liste
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               </div>
             ))}
           </MediaRow>
@@ -218,47 +224,53 @@ function Home() {
               className="relative p-[2px] rounded-[10px] overflow-hidden group/item flex-shrink-0"
               style={{ width: '250px' }}
             >
-              <Link
-                href={`/movie/${movie.id}`}
-                className="relative overflow-hidden rounded-[10px] transition-transform duration-300 ease-out group-hover/item:scale-[1.02] aspect-[2/3] block"
-              >
-                <Image
-                  src={getImageUrl(movie.poster_path, 'w500')}
-                  alt={movie.title}
-                  fill
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-0 transition-opacity duration-300 group-hover/item:opacity-100">
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="flex items-center space-x-2 text-[13px] text-white/90">
-                      <span className="flex items-center">
-                        <span className="text-yellow-400 mr-1">★</span>
-                        {movie.vote_average.toFixed(1)}
-                      </span>
-                      <span>•</span>
-                      <span>{movie.release_date?.split('-')[0]}</span>
-                    </div>
-                    <h3 className="font-semibold text-xl leading-tight text-white mt-2">
-                      {movie.title}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-4">
-                      <Link
-                        href={`/movie/${movie.id}`}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-md text-black text-sm font-medium transition-colors duration-200"
-                      >
-                        <PlayIcon className="w-4 h-4" />
-                        Lecture
-                      </Link>
-                      <button 
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/75 hover:bg-gray-800/90 rounded-md text-white text-sm font-medium transition-colors duration-200 whitespace-nowrap"
-                      >
-                        <PlusIcon className="w-4 h-4" />
-                        Ma Liste
-                      </button>
+              <div className="relative overflow-hidden rounded-[10px] transition-transform duration-300 ease-out group-hover/item:scale-[1.02] aspect-[2/3] block">
+                <Link href={`/movie/${movie.id}`}>
+                  <Image
+                    src={getImageUrl(movie.poster_path, 'w500')}
+                    alt={movie.title}
+                    fill
+                    className="object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-0 transition-opacity duration-300 group-hover/item:opacity-100">
+                    <div className="absolute bottom-0 left-0 right-0 p-6">
+                      <div className="flex items-center space-x-2 text-[13px] text-white/90">
+                        <span className="flex items-center">
+                          <span className="text-yellow-400 mr-1">★</span>
+                          {movie.vote_average.toFixed(1)}
+                        </span>
+                        <span>•</span>
+                        <span>{movie.release_date?.split('-')[0]}</span>
+                      </div>
+                      <h3 className="font-semibold text-xl leading-tight text-white mt-2">
+                        {movie.title}
+                      </h3>
+                      <div className="flex items-center gap-3 mt-4">
+                        <button 
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-white rounded-md text-black text-sm font-medium transition-colors duration-200"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Ajouter ici la logique pour lancer la lecture
+                          }}
+                        >
+                          <PlayIcon className="w-4 h-4" />
+                          Lecture
+                        </button>
+                        <button 
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800/75 hover:bg-gray-800/90 rounded-md text-white text-sm font-medium transition-colors duration-200 whitespace-nowrap"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            // Ajouter ici la logique pour ajouter à la liste
+                          }}
+                        >
+                          <PlusIcon className="w-4 h-4" />
+                          Ma Liste
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+              </div>
             </div>
           ))}
         </MediaRow>
