@@ -127,18 +127,26 @@ const SeasonSection = ({ seriesId, totalSeasons }: SeasonSectionProps) => {
       {/* Season Selector */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-8 gap-4">
         <h2 className="text-2xl font-semibold text-white">Épisodes</h2>
-        <div className="w-full sm:w-auto">
+        <div className="relative w-full sm:w-[200px] group">
           <select
             value={selectedSeason}
             onChange={(e) => setSelectedSeason(Number(e.target.value))}
-            className="w-full sm:w-auto bg-white/10 text-white border border-white/10 rounded-lg px-4 py-2 focus:outline-none focus:border-white/20"
+            className="w-full appearance-none bg-[#1a1a1a]/95 text-white border border-white/10 rounded-lg px-4 py-2.5 pr-10
+                     focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-transparent
+                     hover:bg-white/5 transition-all duration-200
+                     backdrop-blur-xl"
           >
             {seasonOptions.map(({ value, label }) => (
-              <option key={value} value={value}>
+              <option key={value} value={value} className="bg-[#1a1a1a]">
                 {label}
               </option>
             ))}
           </select>
+          <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-white/50 group-hover:text-white/70 transition-colors duration-200">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
         </div>
       </div>
 
@@ -234,8 +242,8 @@ const SeasonSection = ({ seriesId, totalSeasons }: SeasonSectionProps) => {
                       <svg
                         className="w-16 h-16 text-white transform scale-0 group-hover:scale-100 transition-transform duration-300"
                         fill="none"
-                        viewBox="0 0 24 24"
                         stroke="currentColor"
+                        viewBox="0 0 24 24"
                       >
                         <path
                           strokeLinecap="round"

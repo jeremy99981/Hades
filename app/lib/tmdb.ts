@@ -242,4 +242,9 @@ export async function getShowVideos(id: number) {
   }
 }
 
+export async function getMediaDetails(mediaType: string, id: string) {
+  const response = await tmdbApi.get(`/${mediaType}/${id}`);
+  return response.data;
+}
+
 export default tmdbApi;
