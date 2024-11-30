@@ -1,83 +1,86 @@
-import { getMediaDetails } from '@/app/lib/tmdb';
+import { getDetails, getImageUrl } from '@/app/lib/tmdb';
 import Image from 'next/image';
+import { ChevronLeftIcon } from '@heroicons/react/24/outline';
+import Link from 'next/link';
+import CastSection from '@/app/components/CastSection';
+import ClientTrailerButton from '@/app/components/ClientTrailerButton';
 
-interface PageProps {
-  params: {
-    mediaType: string;
-    id: string;
-  };
-}
+export default async function ContentDetails({ params }: { params: { mediaType: string; id: string } }) {
+  const details = await getDetails(params.mediaType as 'movie' | 'tv', params.id);
+  const trailer = details.videos?.results?.find((video: any) => 
+    video.type === 'Trailer' && video.site === 'YouTube'
+  );
 
-export default async function MediaDetailsPage({ params }: PageProps) {
-  const { mediaType, id } = params;
-  const details = await getMediaDetails(mediaType, id);
-
-  const title = mediaType === 'movie' ? details.title : details.name;
-  const releaseDate = mediaType === 'movie' ? details.release_date : details.first_air_date;
+  const cast = details.credits?.cast || [];
+  const director = details.credits?.crew?.find((person: any) => 
+    person.job === 'Director' || person.job === 'Creator'
+  );
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row gap-8">
-        {/* Poster */}
-        <div className="w-full md:w-1/3">
-          <div className="relative aspect-[2/3] w-full rounded-lg overflow-hidden">
-            <Image
-              src={`https://image.tmdb.org/t/p/original${details.poster_path}`}
-              alt={title}
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 33vw"
-              priority
-            />
-          </div>
+    <main className="min-h-screen bg-[#141414] text-white">
+      {/* Back Button */}
+      <Link 
+        href="/"
+        className="fixed top-8 left-8 z-20 p-2 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-200"
+      >
+        <ChevronLeftIcon className="w-6 h-6 text-white" />
+      </Link>
+
+      {/* Hero Section */}
+      <div className="relative h-screen w-full">
+        <div className="absolute inset-0">
+          <Image
+            src={getImageUrl(details.backdrop_path, 'original')}
+            alt={details.title || details.name}
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/50 to-transparent" />
         </div>
 
-        {/* Détails */}
-        <div className="w-full md:w-2/3">
-          <h1 className="text-4xl font-bold mb-4">{title}</h1>
+        <div className="absolute bottom-0 left-0 right-0 p-8 space-y-6 z-10">
+          <h1 className="text-[80px] font-bold text-white leading-none tracking-tight drop-shadow-lg">
+            {details.title || details.name}
+          </h1>
           
-          <div className="mb-4 text-gray-500">
-            <span>{new Date(releaseDate).getFullYear()}</span>
+          <div className="flex items-center space-x-4 text-sm text-white/90">
+            <span className="flex items-center">
+              <span className="text-yellow-400 mr-1">★</span>
+              {details.vote_average?.toFixed(1)}
+            </span>
+            <span>•</span>
+            <span>{details.release_date?.split('-')[0] || details.first_air_date?.split('-')[0]}</span>
             {details.runtime && (
-              <span className="ml-4">{Math.floor(details.runtime / 60)}h {details.runtime % 60}min</span>
-            )}
-            {details.number_of_seasons && (
-              <span className="ml-4">{details.number_of_seasons} saison{details.number_of_seasons > 1 ? 's' : ''}</span>
+              <>
+                <span>•</span>
+                <span>{Math.floor(details.runtime / 60)}h {details.runtime % 60}min</span>
+              </>
             )}
           </div>
 
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Synopsis</h2>
-            <p className="text-gray-700">{details.overview}</p>
-          </div>
+          <p className="max-w-3xl text-lg text-white/80">
+            {details.overview}
+          </p>
 
-          {details.genres && (
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">Genres</h2>
-              <div className="flex flex-wrap gap-2">
-                {details.genres.map((genre: any) => (
-                  <span
-                    key={genre.id}
-                    className="px-3 py-1 bg-gray-100 rounded-full text-sm"
-                  >
-                    {genre.name}
-                  </span>
-                ))}
-              </div>
-            </div>
+          {director && (
+            <p className="text-sm text-white/70">
+              {director.job === 'Director' ? 'Réalisateur' : 'Créateur'}: <span className="text-white">{director.name}</span>
+            </p>
           )}
 
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold mb-2">Note</h2>
-            <div className="flex items-center">
-              <span className="text-2xl font-bold">
-                {Math.round(details.vote_average * 10) / 10}
-              </span>
-              <span className="text-gray-500 ml-2">/ 10</span>
-            </div>
-          </div>
+          {trailer && (
+            <ClientTrailerButton trailerKey={trailer.key} />
+          )}
         </div>
       </div>
-    </div>
+
+      {/* Cast Section */}
+      {cast.length > 0 && (
+        <section className="px-8 py-12">
+          <CastSection cast={cast} />
+        </section>
+      )}
+    </main>
   );
 }
