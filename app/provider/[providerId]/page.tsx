@@ -3,9 +3,10 @@
 import { getProviderContent, getImageUrl } from '@/app/lib/tmdb';
 import Image from 'next/image';
 import Link from 'next/link';
-import { PlayIcon, ChevronLeftIcon, PlusIcon } from '@heroicons/react/24/solid';
+import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid';
 import { useState, useEffect } from 'react';
 import MediaRow from '@/app/components/MediaRow';
+import BackButton from '@/app/components/BackButton';
 
 interface Media {
   id: number;
@@ -144,13 +145,7 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
 
   return (
     <main className="min-h-screen bg-[#141414] text-white">
-      {/* Back Button */}
-      <Link 
-        href="/"
-        className="fixed top-8 left-8 z-20 p-2 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-200"
-      >
-        <ChevronLeftIcon className="w-6 h-6 text-white" />
-      </Link>
+      <BackButton />
 
       {/* Hero Section */}
       {selectedItem && (
