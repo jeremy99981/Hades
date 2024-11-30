@@ -7,9 +7,6 @@ if (!OVERSEERR_API_KEY || !OVERSEERR_URL) {
   throw new Error('Missing Overseerr configuration in environment variables');
 }
 
-// Variable pour suivre si c'est le premier chargement
-let isFirstLoad = true;
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -55,23 +52,6 @@ export async function GET(request: Request) {
 
     const requestsData = await requestsResponse.json();
 
-    // Ne logger que lors du premier chargement
-    if (isFirstLoad && process.env.NODE_ENV === 'development') {
-      console.log('Premier chargement - Données Overseerr:', {
-        mediaInfo: {
-          id: mediaInfo.id,
-          status: mediaInfo.mediaInfo?.status,
-          type: mediaType
-        },
-        requests: requestsData.results.map((req: any) => ({
-          id: req.id,
-          status: req.status,
-          mediaId: req.media.tmdbId
-        }))
-      });
-      isFirstLoad = false;
-    }
-
     // Trouver une demande en cours pour ce média
     const pendingRequest = requestsData.results.find(
       (request: any) => 
@@ -99,12 +79,10 @@ export async function GET(request: Request) {
       mediaId: Number(mediaId),
       mediaType,
       requestId: pendingRequest?.id,
-      mediaInfo: mediaInfo.mediaInfo
     });
   } catch (error) {
-    console.error('Error in status check:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal Server Error' },
+      { error: 'Failed to check media status' },
       { status: 500 }
     );
   }

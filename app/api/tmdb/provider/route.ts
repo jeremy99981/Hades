@@ -1,25 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getProviderContent } from '@/app/lib/tmdb';
+import { z } from 'zod';
+
+const querySchema = z.object({
+  providerId: z.string().transform(Number),
+});
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const providerId = searchParams.get('providerId');
 
-    if (!providerId) {
-      return NextResponse.json(
-        { error: 'Provider ID is required' },
-        { status: 400 }
-      );
-    }
+    const validatedParams = querySchema.parse({
+      providerId,
+    });
 
-    const data = await getProviderContent(parseInt(providerId));
+    const data = await getProviderContent(validatedParams.providerId);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching provider content:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal Server Error' },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
+    console.error('Error in provider route:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

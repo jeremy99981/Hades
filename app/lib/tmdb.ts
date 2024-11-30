@@ -1,4 +1,14 @@
 import axios from 'axios';
+import { 
+  mediaSchema, 
+  mediaDetailsSchema, 
+  seasonSchema, 
+  tmdbResponseSchema,
+  type Media,
+  type MediaDetails,
+  type Season,
+  type TMDBResponse
+} from './schemas';
 
 const BASE_URL = 'https://api.themoviedb.org/3';
 
@@ -12,7 +22,49 @@ const tmdbApi = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  validateStatus: function (status) {
+    return status >= 200 && status < 300;
+  },
+  maxRedirects: 0,
+  timeout: 5000,
 });
+
+// Ajouter des intercepteurs pour logger les requêtes et réponses
+tmdbApi.interceptors.request.use(
+  (config) => {
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+tmdbApi.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Vérifier que l'API est correctement configurée
+if (!process.env.TMDB_API_KEY) {
+  console.error('[TMDB API] Error: TMDB_API_KEY is not defined in environment variables');
+}
+
+// Fonction pour tester la connexion à l'API TMDB
+async function testTMDBConnection(): Promise<boolean> {
+  try {
+    await tmdbApi.get('/configuration');
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+// Tester la connexion au démarrage
+testTMDBConnection();
 
 export const PROVIDER_IDS = {
   netflix: {
@@ -48,30 +100,30 @@ export const getImageUrl = (path: string, size: 'original' | 'w500' | 'w780' = '
 };
 
 // Les fonctions suivantes seront appelées côté serveur uniquement
-export async function getTrending(mediaType: 'movie' | 'tv', timeWindow: 'day' | 'week' = 'week') {
+export async function getTrending(mediaType: 'movie' | 'tv', timeWindow: 'day' | 'week' = 'week'): Promise<TMDBResponse> {
   const response = await tmdbApi.get(`/trending/${mediaType}/${timeWindow}`);
-  return response.data;
+  return tmdbResponseSchema.parse(response.data);
 }
 
-export async function getDetails(mediaType: 'movie' | 'tv', id: string) {
+export async function getDetails(mediaType: 'movie' | 'tv', id: string): Promise<MediaDetails> {
   const response = await tmdbApi.get(`/${mediaType}/${id}`, {
     params: {
       append_to_response: 'credits,videos,images,watch/providers',
     },
   });
-  return response.data;
+  return mediaDetailsSchema.parse(response.data);
 }
 
-export async function getPopular(mediaType: 'movie' | 'tv', page: number = 1) {
+export async function getPopular(mediaType: 'movie' | 'tv', page: number = 1): Promise<TMDBResponse> {
   const response = await tmdbApi.get(`/${mediaType}/popular`, {
     params: {
       page,
     },
   });
-  return response.data;
+  return tmdbResponseSchema.parse(response.data);
 }
 
-export async function getProviderContent(providerId: number) {
+export async function getProviderContent(providerId: number): Promise<TMDBResponse> {
   try {
     // Récupérer les films tendances du provider
     const trendingMoviesResponse = await tmdbApi.get('/discover/movie', {
@@ -94,7 +146,11 @@ export async function getProviderContent(providerId: number) {
     // Si nous n'avons pas assez de films tendances, récupérer des films populaires
     let movies = trendingMoviesResponse.data.results.slice(0, 10);
     if (movies.length < 10) {
-      const popularMoviesResponse = await tmdbApi.get('/movie/popular');
+      const popularMoviesResponse = await tmdbApi.get('/movie/popular', {
+        params: {
+          watch_region: 'FR',
+        },
+      });
       const remainingMovies = popularMoviesResponse.data.results
         .filter((movie: any) => !movies.some((m: any) => m.id === movie.id))
         .slice(0, 10 - movies.length);
@@ -104,7 +160,11 @@ export async function getProviderContent(providerId: number) {
     // Si nous n'avons pas assez de séries tendances, récupérer des séries populaires
     let tvShows = trendingTvResponse.data.results.slice(0, 10);
     if (tvShows.length < 10) {
-      const popularTvResponse = await tmdbApi.get('/tv/popular');
+      const popularTvResponse = await tmdbApi.get('/tv/popular', {
+        params: {
+          watch_region: 'FR',
+        },
+      });
       const remainingTvShows = popularTvResponse.data.results
         .filter((show: any) => !tvShows.some((s: any) => s.id === show.id))
         .slice(0, 10 - tvShows.length);
@@ -112,17 +172,37 @@ export async function getProviderContent(providerId: number) {
     }
 
     // Ajouter le type de média à chaque élément
-    movies = movies.map((item: any) => ({ ...item, media_type: 'movie' }));
-    tvShows = tvShows.map((item: any) => ({ ...item, media_type: 'tv' }));
+    movies = movies.map((item: any) => ({ 
+      ...item, 
+      media_type: 'movie',
+      overview: item.overview || '',
+      vote_average: item.vote_average || 0,
+    }));
 
-    return [...movies, ...tvShows];
+    tvShows = tvShows.map((item: any) => ({ 
+      ...item, 
+      media_type: 'tv',
+      overview: item.overview || '',
+      vote_average: item.vote_average || 0,
+    }));
+
+    // Mélanger les résultats
+    const results = [...movies, ...tvShows].sort(() => Math.random() - 0.5);
+
+    const response = {
+      page: 1,
+      results,
+      total_pages: 1,
+      total_results: results.length,
+    };
+
+    return tmdbResponseSchema.parse(response);
   } catch (error) {
-    console.error('Error fetching provider content:', error);
     throw error;
   }
 }
 
-export async function getTrendingByNetwork(networkId: number) {
+export async function getTrendingByNetwork(networkId: number): Promise<TMDBResponse> {
   try {
     const response = await tmdbApi.get('/discover/tv', {
       params: {
@@ -133,24 +213,41 @@ export async function getTrendingByNetwork(networkId: number) {
         page: 1
       }
     });
-    return response.data;
+    return tmdbResponseSchema.parse(response.data);
   } catch (error) {
     console.error('Error fetching network trending:', error);
     return { results: [] };
   }
 }
 
-export async function searchContent(query: string, page: number = 1) {
-  const response = await tmdbApi.get('/search/multi', {
-    params: {
-      query,
-      page,
-    },
-  });
-  return response.data;
+export async function searchContent(query: string, page: number = 1): Promise<TMDBResponse> {
+  try {
+    const response = await tmdbApi.get('/search/multi', {
+      params: {
+        query,
+        page,
+        include_adult: false,
+      },
+    });
+
+    // Filtrer les résultats pour ne garder que les films et séries TV
+    const filteredResults = response.data.results.filter(
+      (item: any) => item.media_type === 'movie' || item.media_type === 'tv'
+    );
+
+    // Mettre à jour les données avec les résultats filtrés
+    const filteredData = {
+      ...response.data,
+      results: filteredResults,
+    };
+
+    return tmdbResponseSchema.parse(filteredData);
+  } catch (error) {
+    throw error;
+  }
 }
 
-export async function getShowDetails(id: number) {
+export async function getShowDetails(id: number): Promise<MediaDetails> {
   console.log('Fetching show details from TMDB API for ID:', id);
   try {
     const response = await tmdbApi.get(`/tv/${id}`, {
@@ -175,14 +272,14 @@ export async function getShowDetails(id: number) {
       console.warn('Show has no seasons data:', data);
     }
     
-    return data;
+    return mediaDetailsSchema.parse(data);
   } catch (error) {
     console.error('Error fetching show details:', error);
     throw error;
   }
 }
 
-export async function getShowCredits(id: number) {
+export async function getShowCredits(id: number): Promise<any> {
   const response = await tmdbApi.get(`/tv/${id}/credits`, {
     params: {
       language: 'fr-FR'
@@ -191,44 +288,48 @@ export async function getShowCredits(id: number) {
   return response.data;
 }
 
-export async function getSeasonDetails(showId: number, seasonNumber: number) {
-  console.log(`Fetching season details for show ${showId}, season ${seasonNumber}`);
+export async function getSeasonDetails(showId: number, seasonNumber: number): Promise<Season> {
   try {
-    const url = `${BASE_URL}/tv/${showId}/season/${seasonNumber}`;
-    console.log('TMDB API URL:', url);
-    
     const response = await tmdbApi.get(`/tv/${showId}/season/${seasonNumber}`, {
       params: {
         language: 'fr-FR',
-        api_key: process.env.TMDB_API_KEY
+        append_to_response: 'credits,videos'
       }
     });
-    
-    console.log('TMDB API Response Status:', response.status);
-    console.log('TMDB API Response Data:', {
-      name: response.data?.name,
-      seasonNumber: response.data?.season_number,
-      episodeCount: response.data?.episodes?.length
-    });
-    
-    if (!response.data || !response.data.episodes) {
-      console.error('Invalid response format:', response.data);
-      throw new Error('Invalid response format from TMDB API');
+
+    if (!response.data) {
+      throw new Error('No data received from TMDB API');
     }
-    
-    return response.data;
+
+    // Log pour debug
+    console.log('TMDB API Season Response:', {
+      statusCode: response.status,
+      hasData: !!response.data,
+      seasonNumber: response.data?.season_number,
+      episodeCount: response.data?.episode_count,
+      episodesCount: response.data?.episodes?.length,
+      firstEpisodeGuests: response.data?.episodes?.[0]?.guest_stars?.length
+    });
+
+    return seasonSchema.parse(response.data);
   } catch (error) {
-    console.error('Error fetching season details:', error);
+    console.error('Error fetching season details from TMDB:', error);
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 404) {
+        throw new Error(`Season ${seasonNumber} not found for show ${showId}`);
+      }
+      throw new Error(`TMDB API error: ${error.response?.status} ${error.response?.statusText}`);
+    }
     throw error;
   }
 }
 
-export async function getEpisodeDetails(showId: number, seasonNumber: number, episodeNumber: number) {
+export async function getEpisodeDetails(showId: number, seasonNumber: number, episodeNumber: number): Promise<any> {
   const response = await tmdbApi.get(`/tv/${showId}/season/${seasonNumber}/episode/${episodeNumber}`);
   return response.data;
 }
 
-export async function getShowVideos(id: number) {
+export async function getShowVideos(id: number): Promise<any[]> {
   try {
     const response = await tmdbApi.get(`/tv/${id}/videos`, {
       params: {
@@ -243,52 +344,60 @@ export async function getShowVideos(id: number) {
   }
 }
 
-export async function getMediaDetails(mediaType: string, id: string) {
+export async function getMediaDetails(mediaType: string, id: string): Promise<MediaDetails> {
   const response = await tmdbApi.get(`/${mediaType}/${id}`);
-  return response.data;
+  return mediaDetailsSchema.parse(response.data);
 }
 
 // Fonction utilitaire pour obtenir l'URL complète
-const getBaseUrl = () => {
-  if (typeof window !== 'undefined') return ''; // côté client, on utilise une URL relative
-  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'; // côté serveur, on utilise l'URL complète
-};
-
-export const clientApi = {
-  async getTrending(mediaType: 'movie' | 'tv', timeWindow: 'day' | 'week' = 'week') {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/tmdb/trending?mediaType=${mediaType}&timeWindow=${timeWindow}`);
-    if (!response.ok) throw new Error('Failed to fetch trending');
-    return response.json();
-  },
-
-  async getDetails(mediaType: 'movie' | 'tv', id: string) {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/tmdb/details?mediaType=${mediaType}&id=${id}`);
-    if (!response.ok) throw new Error('Failed to fetch details');
-    return response.json();
-  },
-
-  async getTrendingByNetwork(networkId: number) {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/tmdb/network?networkId=${networkId}`);
-    if (!response.ok) throw new Error('Failed to fetch network content');
-    return response.json();
-  },
-
-  async getProviderContent(providerId: number) {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/tmdb/provider?providerId=${providerId}`);
-    if (!response.ok) throw new Error('Failed to fetch provider content');
-    return response.json();
-  },
-
-  async getSeasonDetails(showId: number, seasonNumber: number) {
-    const baseUrl = getBaseUrl();
-    const response = await fetch(`${baseUrl}/api/tmdb/season?showId=${showId}&seasonNumber=${seasonNumber}`);
-    if (!response.ok) throw new Error('Failed to fetch season details');
-    return response.json();
+function getBaseUrl() {
+  if (typeof window !== 'undefined') {
+    // Côté client
+    return window.location.origin;
   }
+  // Côté serveur
+  return 'http://localhost:3000';
 }
+
+// Les fonctions du client API avec des URLs complètes
+export const clientApi = {
+  async getTrending(mediaType: 'movie' | 'tv'): Promise<TMDBResponse> {
+    const baseUrl = getBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/trending/${mediaType}`);
+    return tmdbResponseSchema.parse(response.data);
+  },
+
+  async getDetails(mediaType: 'movie' | 'tv', id: string): Promise<MediaDetails> {
+    const baseUrl = getBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/details/${mediaType}/${id}`);
+    return mediaDetailsSchema.parse(response.data);
+  },
+
+  async getTrendingByNetwork(networkId: string): Promise<TMDBResponse> {
+    const baseUrl = getBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/network/${networkId}`);
+    return tmdbResponseSchema.parse(response.data);
+  },
+
+  async getProviderContent(providerId: string): Promise<TMDBResponse> {
+    const baseUrl = getBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/provider/${providerId}`);
+    return tmdbResponseSchema.parse(response.data);
+  },
+
+  async getSeasonDetails(tvId: string, seasonNumber: string): Promise<Season> {
+    const baseUrl = getBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/tv/${tvId}/season/${seasonNumber}`);
+    return seasonSchema.parse(response.data);
+  },
+
+  async searchContent(query: string): Promise<TMDBResponse> {
+    const baseUrl = getBaseUrl();
+    const response = await axios.get(`${baseUrl}/api/search`, {
+      params: { query }
+    });
+    return tmdbResponseSchema.parse(response.data);
+  }
+};
 
 export default tmdbApi;

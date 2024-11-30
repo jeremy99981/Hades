@@ -42,6 +42,7 @@ const SearchBar = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isTrendingLoading, setIsTrendingLoading] = useState(false)
   const [isProviderLoading, setIsProviderLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const searchContainerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
@@ -80,47 +81,44 @@ const SearchBar = () => {
   useEffect(() => {
     const fetchResults = async () => {
       if (debouncedQuery.length < 2) {
-        setResults([])
-        return
+        setResults([]);
+        return;
       }
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const data = await clientApi.searchContent(debouncedQuery)
-        let filteredResults = data.results
-          .filter((item: SearchResult) => item.media_type === 'movie' || item.media_type === 'tv')
-          
-        // If a provider is selected, we'll need to filter the results further
-        // Note: This is a simplified filter. In a real app, you'd want to check the actual provider availability
-        if (selectedProvider) {
-          filteredResults = filteredResults.slice(0, 6)
-        } else {
-          filteredResults = filteredResults.slice(0, 6)
-        }
+        console.log('Fetching search results for query:', debouncedQuery);
+        const response = await clientApi.searchContent(debouncedQuery);
+        console.log('Search response:', response);
         
-        setResults(filteredResults)
+        let filteredResults = response.results
+          .filter((item: SearchResult) => item.media_type === 'movie' || item.media_type === 'tv')
+          .slice(0, 6);
+        
+        setResults(filteredResults);
       } catch (error) {
-        console.error('Error fetching search results:', error)
+        console.error('Detailed error fetching search results:', error);
+        setError('Failed to fetch search results');
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchResults()
-  }, [debouncedQuery, selectedProvider])
+    fetchResults();
+  }, [debouncedQuery]);
 
   useEffect(() => {
     const fetchProviderContent = async () => {
       if (!selectedProvider) return
       
-      setIsProviderLoading(true)
+      setIsProviderLoading(true);
       try {
         const content = await clientApi.getProviderContent(selectedProvider.id)
-        setProviderContent(content.slice(0, 6))
+        setProviderContent(content.results.slice(0, 6))
       } catch (error) {
         console.error('Error fetching provider content:', error)
       } finally {
-        setIsProviderLoading(false)
+        setIsProviderLoading(false);
       }
     }
 
@@ -131,7 +129,7 @@ const SearchBar = () => {
 
   useEffect(() => {
     const fetchTrending = async () => {
-      setIsTrendingLoading(true)
+      setIsTrendingLoading(true);
       try {
         const [moviesData, showsData] = await Promise.all([
           clientApi.getTrending('movie', 'week'),
@@ -142,7 +140,7 @@ const SearchBar = () => {
       } catch (error) {
         console.error('Error fetching trending content:', error)
       } finally {
-        setIsTrendingLoading(false)
+        setIsTrendingLoading(false);
       }
     }
 

@@ -1,26 +1,30 @@
 import { NextResponse } from 'next/server';
-import { getDetails } from '@/app/lib/tmdb';
+import { getMediaDetails } from '@/app/lib/tmdb';
+import { z } from 'zod';
+
+const querySchema = z.object({
+  mediaType: z.enum(['movie', 'tv']),
+  id: z.string(),
+});
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const mediaType = searchParams.get('mediaType') as 'movie' | 'tv';
+    const mediaType = searchParams.get('mediaType');
     const id = searchParams.get('id');
 
-    if (!mediaType || !id) {
-      return NextResponse.json(
-        { error: 'Media type and ID are required' },
-        { status: 400 }
-      );
-    }
+    const validatedParams = querySchema.parse({
+      mediaType,
+      id,
+    });
 
-    const data = await getDetails(mediaType, id);
+    const data = await getMediaDetails(validatedParams.mediaType, validatedParams.id);
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error fetching details:', error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Internal Server Error' },
-      { status: 500 }
-    );
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: error.errors }, { status: 400 });
+    }
+    console.error('Error in details route:', error);
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -54,14 +54,14 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
     const fetchContent = async () => {
       setLoading(true);
       try {
-        const data = await clientApi.getProviderContent(Number(params.providerId));
-        const movies = data.filter((item: Media) => item.media_type === 'movie');
-        const tvShows = data.filter((item: Media) => item.media_type === 'tv');
+        const response = await clientApi.getProviderContent(Number(params.providerId));
+        const movies = response.results.filter((item: Media) => item.media_type === 'movie');
+        const tvShows = response.results.filter((item: Media) => item.media_type === 'tv');
         setContent([...movies, ...tvShows]);
         setProviderName(getProviderName(params.providerId));
         
         // Sélectionner le premier élément avec une image de fond pour le héro
-        const itemWithBackdrop = data.find(item => item.backdrop_path);
+        const itemWithBackdrop = response.results.find(item => item.backdrop_path);
         if (itemWithBackdrop) {
           setSelectedItem(itemWithBackdrop);
         }

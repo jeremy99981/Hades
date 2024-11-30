@@ -214,17 +214,14 @@ const EpisodeDetailModal = ({ isOpen, onClose, episode }: EpisodeDetailModalProp
           {/* Guest Stars */}
           {episode.guest_stars && episode.guest_stars.length > 0 && (
             <div>
-              <h3 className="text-lg font-medium text-white mb-4">Guest Stars</h3>
+              <h3 className="text-lg font-medium text-white mb-4">Casting invité</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {episode.guest_stars.map(star => (
-                  <div
-                    key={star.id}
-                    className="flex items-center gap-3 bg-white/5 rounded-lg p-2"
-                  >
-                    {star.profile_path ? (
+                {episode.guest_stars.map(actor => (
+                  <div key={actor.id} className="flex items-center gap-3 bg-white/5 rounded-lg p-2">
+                    {actor.profile_path ? (
                       <Image
-                        src={getImageUrl(star.profile_path)}
-                        alt={star.name}
+                        src={getImageUrl(actor.profile_path)}
+                        alt={actor.name}
                         width={48}
                         height={48}
                         className="rounded-lg object-cover"
@@ -232,13 +229,13 @@ const EpisodeDetailModal = ({ isOpen, onClose, episode }: EpisodeDetailModalProp
                     ) : (
                       <div className="w-12 h-12 rounded-lg bg-white/10 flex items-center justify-center">
                         <span className="text-white/30 text-lg font-medium">
-                          {star.name.charAt(0)}
+                          {actor.name.charAt(0)}
                         </span>
                       </div>
                     )}
                     <div>
-                      <div className="text-white/90 font-medium">{star.name}</div>
-                      <div className="text-white/50 text-sm">{star.character}</div>
+                      <div className="text-white/90 font-medium">{actor.name}</div>
+                      <div className="text-white/50 text-sm">{actor.character}</div>
                     </div>
                   </div>
                 ))}

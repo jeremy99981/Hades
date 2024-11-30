@@ -53,39 +53,53 @@ const streamingServicesConfig = [
 ];
 
 export default async function Page() {
-  const [trendingMovies, trendingTVShows] = await Promise.all([
-    clientApi.getTrending('movie'),
-    clientApi.getTrending('tv')
-  ]);
+  try {
+    const [trendingMovies, trendingTVShows] = await Promise.all([
+      clientApi.getTrending('movie'),
+      clientApi.getTrending('tv')
+    ]);
 
-  // Sélectionner un film aléatoire pour le héro
-  const featuredMovie = trendingMovies.results[Math.floor(Math.random() * trendingMovies.results.length)];
+    // Vérifier si nous avons des résultats
+    if (!trendingMovies.results?.length) {
+      throw new Error('No trending movies available');
+    }
 
-  // Récupérer les détails du film en vedette (incluant les vidéos)
-  const heroDetails = await clientApi.getDetails('movie', featuredMovie.id.toString());
+    // Sélectionner un film aléatoire pour le héro
+    const featuredMovie = trendingMovies.results[Math.floor(Math.random() * trendingMovies.results.length)];
 
-  // Trouver la bande-annonce
-  const trailer = heroDetails.videos?.results?.find(video => video.type === 'Trailer' && video.site === 'YouTube');
+    // Récupérer les détails du film en vedette (incluant les vidéos)
+    const heroDetails = await clientApi.getDetails('movie', featuredMovie.id.toString());
 
-  // Récupérer les contenus par service de streaming
-  const networkPromises = streamingServicesConfig.map(service => 
-    clientApi.getTrendingByNetwork(service.networkId)
-  );
-  
-  const networkShows = await Promise.all(networkPromises);
-  
-  const streamingServicesWithShows = streamingServicesConfig.map((service, index) => ({
-    ...service,
-    trendingShow: networkShows[index]
-  }));
+    // Trouver la bande-annonce
+    const trailer = heroDetails.videos?.results?.find(video => video.type === 'Trailer' && video.site === 'YouTube');
 
-  return (
-    <HomePage
-      trendingMovies={trendingMovies}
-      trendingTVShows={trendingTVShows}
-      featuredMovie={featuredMovie}
-      trailer={trailer}
-      streamingServicesWithShows={streamingServicesWithShows}
-    />
-  );
+    // Récupérer les contenus par service de streaming
+    const networkPromises = streamingServicesConfig.map(service => 
+      clientApi.getTrendingByNetwork(service.networkId.toString())
+    );
+    
+    const networkShows = await Promise.all(networkPromises);
+    
+    const streamingServicesWithShows = streamingServicesConfig.map((service, index) => ({
+      ...service,
+      trendingShow: networkShows[index]
+    }));
+
+    return (
+      <HomePage
+        trendingMovies={trendingMovies}
+        trendingTVShows={trendingTVShows}
+        featuredMovie={featuredMovie}
+        trailer={trailer}
+        streamingServicesWithShows={streamingServicesWithShows}
+      />
+    );
+  } catch (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
+        <h1 className="text-2xl font-bold mb-4">Une erreur est survenue</h1>
+        <p>Impossible de charger le contenu. Veuillez réessayer plus tard.</p>
+      </div>
+    );
+  }
 }
