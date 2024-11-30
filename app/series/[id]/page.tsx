@@ -61,9 +61,11 @@ async function SeriesPage({ params }: { params: { id: string } }) {
             </p>
           )}
 
-          {trailer && (
-            <ClientTrailerButton trailerKey={trailer.key} />
-          )}
+          <ClientTrailerButton 
+            trailerKey={trailer?.key}
+            title={show.name}
+            year={new Date(show.first_air_date).getFullYear().toString()}
+          />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
-import { getSeasonDetails, getImageUrl } from '../lib/tmdb'
+import { getImageUrl, clientApi } from '../lib/tmdb'
 import EpisodeDetailModal from './EpisodeDetailModal'
 
 interface Episode {
@@ -48,7 +48,7 @@ const SeasonSection = ({ seriesId, totalSeasons }: SeasonSectionProps) => {
   useEffect(() => {
     const checkSpecials = async () => {
       try {
-        const data = await getSeasonDetails(parseInt(seriesId), 0)
+        const data = await clientApi.getSeasonDetails(parseInt(seriesId), 0)
         if (data.episodes && data.episodes.length > 0) {
           console.log('Found special episodes:', data.episodes.length);
           setHasSpecials(true)
@@ -67,7 +67,7 @@ const SeasonSection = ({ seriesId, totalSeasons }: SeasonSectionProps) => {
       setLoading(true)
       setError(null)
       try {
-        const data = await getSeasonDetails(parseInt(seriesId), selectedSeason)
+        const data = await clientApi.getSeasonDetails(parseInt(seriesId), selectedSeason)
         console.log('Season details response:', {
           episodes: data.episodes?.length,
           seasonNumber: data.season_number,

@@ -1,4 +1,6 @@
-const OVERSEERR_API_KEY = 'MTcyMDU1MTgwMzU5OTkzMTY4NjVmLWUzOWEtNGM0My1iMDk1LTljMTZmNmJmMTAzOA==';
+import { env } from 'process';
+
+const OVERSEERR_API_KEY = env.OVERSEERR_API_KEY;
 
 interface RequestOptions {
   mediaType: 'movie' | 'tv';

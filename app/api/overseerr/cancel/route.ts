@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 
-const OVERSEERR_API_KEY = 'MTcyMDU1MTgwMzU5OTkzMTY4NjVmLWUzOWEtNGM0My1iMDk1LTljMTZmNmJmMTAzOA==';
-const OVERSEERR_URL = 'http://192.168.1.33:5055';
+const OVERSEERR_API_KEY = process.env.OVERSEERR_API_KEY;
+const OVERSEERR_URL = process.env.OVERSEERR_URL;
+
+if (!OVERSEERR_API_KEY || !OVERSEERR_URL) {
+  throw new Error('Missing Overseerr configuration in environment variables');
+}
 
 export async function DELETE(request: Request) {
   try {

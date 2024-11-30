@@ -1,11 +1,11 @@
-import { getDetails, getImageUrl } from '@/app/lib/tmdb';
+import { getImageUrl, clientApi } from '@/app/lib/tmdb';
 import Image from 'next/image';
 import CastSection from '@/app/components/CastSection';
 import ClientTrailerButton from '@/app/components/ClientTrailerButton';
 import BackButton from '@/app/components/BackButton';
 
 export default async function ContentDetails({ params }: { params: { mediaType: string; id: string } }) {
-  const details = await getDetails(params.mediaType as 'movie' | 'tv', params.id);
+  const details = await clientApi.getDetails(params.mediaType as 'movie' | 'tv', params.id);
   const trailer = details.videos?.results?.find((video: any) => 
     video.type === 'Trailer' && video.site === 'YouTube'
   );
@@ -62,9 +62,11 @@ export default async function ContentDetails({ params }: { params: { mediaType: 
             </p>
           )}
 
-          {trailer && (
-            <ClientTrailerButton trailerKey={trailer.key} />
-          )}
+          <ClientTrailerButton 
+            trailerKey={trailer?.key}
+            title={details.title || details.name}
+            year={(details.release_date || details.first_air_date)?.split('-')[0]}
+          />
         </div>
       </div>
 

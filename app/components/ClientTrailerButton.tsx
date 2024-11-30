@@ -14,23 +14,30 @@ const VideoModal = dynamic(() => import('./VideoModal'), {
 });
 
 interface ClientTrailerButtonProps {
-  trailerKey: string;
+  trailerKey?: string;
+  title: string;
+  year?: string;
 }
 
-export default function ClientTrailerButton({ trailerKey }: ClientTrailerButtonProps) {
+export default function ClientTrailerButton({ trailerKey, title, year }: ClientTrailerButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
     <>
       <button
-        onClick={() => setIsModalOpen(true)}
-        className="flex items-center gap-2 px-6 py-3 bg-white text-black rounded-lg font-semibold hover:bg-white/90 transition-colors"
+        onClick={() => trailerKey && setIsModalOpen(true)}
+        disabled={!trailerKey}
+        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
+          trailerKey 
+            ? 'bg-white text-black hover:bg-white/90' 
+            : 'bg-white/10 text-white/50 cursor-not-allowed'
+        }`}
       >
         <PlayIcon className="w-6 h-6" />
-        Bande annonce
+        {trailerKey ? 'Bande annonce' : 'Bande annonce non disponible'}
       </button>
 
-      {isModalOpen && (
+      {isModalOpen && trailerKey && (
         <VideoModal
           isOpen={isModalOpen}
           closeModal={() => setIsModalOpen(false)}

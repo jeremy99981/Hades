@@ -6,7 +6,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const tmdbApi = axios.create({
   baseURL: BASE_URL,
   params: {
-    api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
+    api_key: process.env.TMDB_API_KEY,
     language: 'fr-FR',
   },
   headers: {
@@ -41,6 +41,7 @@ export const PROVIDER_IDS = {
   }
 };
 
+// Fonction utilisable côté client car elle ne nécessite pas la clé API
 export const getImageUrl = (path: string, size: 'original' | 'w500' | 'w780' = 'w500') => {
   if (!path) return '';
   return `${process.env.NEXT_PUBLIC_TMDB_IMAGE_BASE_URL}/${size}${path}`;
@@ -199,7 +200,7 @@ export async function getSeasonDetails(showId: number, seasonNumber: number) {
     const response = await tmdbApi.get(`/tv/${showId}/season/${seasonNumber}`, {
       params: {
         language: 'fr-FR',
-        api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY
+        api_key: process.env.TMDB_API_KEY
       }
     });
     
@@ -231,7 +232,7 @@ export async function getShowVideos(id: number) {
   try {
     const response = await tmdbApi.get(`/tv/${id}/videos`, {
       params: {
-        api_key: process.env.NEXT_PUBLIC_TMDB_API_KEY,
+        api_key: process.env.TMDB_API_KEY,
         language: 'fr-FR'
       }
     });
@@ -245,6 +246,42 @@ export async function getShowVideos(id: number) {
 export async function getMediaDetails(mediaType: string, id: string) {
   const response = await tmdbApi.get(`/${mediaType}/${id}`);
   return response.data;
+}
+
+// Fonction utilitaire pour obtenir l'URL complète
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') return ''; // côté client, on utilise une URL relative
+  return process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'; // côté serveur, on utilise l'URL complète
+};
+
+export const clientApi = {
+  async getTrending(mediaType: 'movie' | 'tv', timeWindow: 'day' | 'week' = 'week') {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/tmdb/trending?mediaType=${mediaType}&timeWindow=${timeWindow}`);
+    if (!response.ok) throw new Error('Failed to fetch trending');
+    return response.json();
+  },
+
+  async getDetails(mediaType: 'movie' | 'tv', id: string) {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/tmdb/details?mediaType=${mediaType}&id=${id}`);
+    if (!response.ok) throw new Error('Failed to fetch details');
+    return response.json();
+  },
+
+  async getTrendingByNetwork(networkId: number) {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/tmdb/network?networkId=${networkId}`);
+    if (!response.ok) throw new Error('Failed to fetch network content');
+    return response.json();
+  },
+
+  async getSeasonDetails(showId: number, seasonNumber: number) {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/tmdb/season?showId=${showId}&seasonNumber=${seasonNumber}`);
+    if (!response.ok) throw new Error('Failed to fetch season details');
+    return response.json();
+  }
 }
 
 export default tmdbApi;

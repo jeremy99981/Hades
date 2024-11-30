@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useDebounce } from '../hooks/useDebounce'
-import { searchContent, getTrending, getProviderContent, PROVIDER_IDS } from '../lib/tmdb'
+import { clientApi, getImageUrl, PROVIDER_IDS } from '../lib/tmdb'
 import Image from 'next/image'
 
 interface SearchResult {
@@ -86,7 +86,7 @@ const SearchBar = () => {
 
       setIsLoading(true)
       try {
-        const data = await searchContent(debouncedQuery)
+        const data = await clientApi.searchContent(debouncedQuery)
         let filteredResults = data.results
           .filter((item: SearchResult) => item.media_type === 'movie' || item.media_type === 'tv')
           
@@ -115,7 +115,7 @@ const SearchBar = () => {
       
       setIsProviderLoading(true)
       try {
-        const content = await getProviderContent(selectedProvider.id)
+        const content = await clientApi.getProviderContent(selectedProvider.id)
         setProviderContent(content.slice(0, 6))
       } catch (error) {
         console.error('Error fetching provider content:', error)
@@ -134,8 +134,8 @@ const SearchBar = () => {
       setIsTrendingLoading(true)
       try {
         const [moviesData, showsData] = await Promise.all([
-          getTrending('movie', 'week'),
-          getTrending('tv', 'week')
+          clientApi.getTrending('movie', 'week'),
+          clientApi.getTrending('tv', 'week')
         ])
         setTrendingMovies(moviesData.results.slice(0, 4))
         setTrendingShows(showsData.results.slice(0, 4))
@@ -244,7 +244,7 @@ const SearchBar = () => {
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-white/20 border-r-2 border-white/20 border-b-2 border-white/20 border-l-2 border-white"></div>
                   </div>
                 ) : (
-                  <>
+                  < >
                     {/* Trending Movies Section */}
                     <div>
                       <h3 className="text-white/70 text-sm font-medium px-2 mb-3">Films Tendance</h3>
@@ -274,7 +274,7 @@ const SearchBar = () => {
                         ))}
                       </div>
                     </div>
-                  </>
+                  </ >
                 )}
               </div>
             )}
@@ -293,7 +293,7 @@ const ResultCard = ({ result, onClick }: { result: SearchResult, onClick: () => 
     <div className="relative aspect-[2/3]">
       {result.poster_path ? (
         <img
-          src={`https://image.tmdb.org/t/p/w185${result.poster_path}`}
+          src={getImageUrl(result.poster_path)}
           alt={result.title || result.name}
           className="w-full h-full object-cover"
         />

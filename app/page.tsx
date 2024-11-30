@@ -1,15 +1,5 @@
-'use client';
-
-import { getTrending, getImageUrl, PROVIDER_IDS, getTrendingByNetwork } from './lib/tmdb';
-import Link from 'next/link';
-import Image from 'next/image';
-import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid';
-import { InformationCircleIcon } from '@heroicons/react/24/outline';
-import MediaRow from './components/MediaRow';
-import MediaCard from './components/MediaCard';
-import StreamingServiceCard from './components/StreamingServiceCard';
-
-import { useEffect, useState } from 'react';
+import { PROVIDER_IDS, clientApi } from './lib/tmdb';
+import HomePage from './components/HomePage';
 
 const streamingServicesConfig = [
   {
@@ -62,144 +52,40 @@ const streamingServicesConfig = [
   }
 ];
 
-function Home() {
-  const [trendingMovies, setTrendingMovies] = useState<any>({ results: [] });
-  const [trendingTVShows, setTrendingTVShows] = useState<any>({ results: [] });
-  const [networkShows, setNetworkShows] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default async function Page() {
+  const [trendingMovies, trendingTVShows] = await Promise.all([
+    clientApi.getTrending('movie'),
+    clientApi.getTrending('tv')
+  ]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [movies, shows] = await Promise.all([
-          getTrending('movie'),
-          getTrending('tv')
-        ]);
+  // Sélectionner un film aléatoire pour le héro
+  const featuredMovie = trendingMovies.results[Math.floor(Math.random() * trendingMovies.results.length)];
 
-        const networkShowsData = await Promise.all(
-          streamingServicesConfig.map(service => 
-            getTrendingByNetwork(service.networkId)
-          )
-        );
+  // Récupérer les détails du film en vedette (incluant les vidéos)
+  const heroDetails = await clientApi.getDetails('movie', featuredMovie.id.toString());
 
-        setTrendingMovies(movies);
-        setTrendingTVShows(shows);
-        setNetworkShows(networkShowsData);
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        setIsLoading(false);
-      }
-    };
+  // Trouver la bande-annonce
+  const trailer = heroDetails.videos?.results?.find(video => video.type === 'Trailer' && video.site === 'YouTube');
 
-    fetchData();
-  }, []);
-
-  const featuredMovie = trendingMovies.results[0];
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#141414] text-white flex items-center justify-center">
-        <div className="text-xl">Chargement...</div>
-      </div>
-    );
-  }
-
+  // Récupérer les contenus par service de streaming
+  const networkPromises = streamingServicesConfig.map(service => 
+    clientApi.getTrendingByNetwork(service.networkId)
+  );
+  
+  const networkShows = await Promise.all(networkPromises);
+  
   const streamingServicesWithShows = streamingServicesConfig.map((service, index) => ({
     ...service,
     trendingShow: networkShows[index]
   }));
 
   return (
-    <main className="min-h-screen bg-[#141414] text-white">
-      {/* Hero Section */}
-      {featuredMovie && (
-        <div className="relative h-screen w-full">
-          <div className="absolute inset-0">
-            <Image
-              src={getImageUrl(featuredMovie.backdrop_path, 'original')}
-              alt={featuredMovie.title}
-              fill
-              className="object-cover"
-              priority
-            />
-            {/* Gradient overlay amélioré pour une meilleure lisibilité avec la navbar */}
-            <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-[#141414]" />
-          </div>
-          <div className="absolute bottom-[20%] left-0 right-0 px-8 space-y-6">
-            <h1 className="text-[80px] font-bold text-white leading-none tracking-tight drop-shadow-lg max-w-4xl">
-              {featuredMovie.title}
-            </h1>
-            <p className="text-lg text-white/90 max-w-2xl line-clamp-3">
-              {featuredMovie.overview}
-            </p>
-            <div className="flex items-center gap-3">
-              <button 
-                className="flex items-center gap-2 px-8 py-3 bg-white/90 text-black font-medium rounded-lg hover:bg-white transition-colors duration-200"
-              >
-                <PlayIcon className="w-5 h-5" />
-                Bande annonce
-              </button>
-              <Link 
-                href={`/movie/${featuredMovie.id}`}
-                className="flex items-center gap-2 px-8 py-3 bg-[rgba(255,255,255,0.1)] text-white font-medium rounded-lg hover:bg-[rgba(255,255,255,0.2)] backdrop-blur-sm transition-colors duration-200"
-              >
-                <InformationCircleIcon className="w-5 h-5" />
-                Plus d'infos
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Content Sections */}
-      <div className="relative z-10 pb-24">
-        {/* Trending TV Shows Section */}
-        <section className="pt-24">
-          <MediaRow title="Séries Tendances" itemWidth={250}>
-            {trendingTVShows.results.slice(0, 12).map((show: any) => (
-              <MediaCard key={show.id} item={{ ...show, media_type: 'tv' }} />
-            ))}
-          </MediaRow>
-        </section>
-
-        {/* Trending Movies Section */}
-        <section className="mt-24">
-          <MediaRow title="Films Tendances" itemWidth={250}>
-            {trendingMovies.results.slice(0, 12).map((movie: any) => (
-              <MediaCard key={movie.id} item={{ ...movie, media_type: 'movie' }} />
-            ))}
-          </MediaRow>
-        </section>
-
-        {/* Streaming Services Section */}
-        <section className="mt-24 px-16">
-          <h2 className="text-2xl font-medium text-white mb-6">
-            Services de Streaming
-          </h2>
-          <div className="grid grid-cols-3 gap-6">
-            {streamingServicesWithShows.map((service) => {
-              const featuredShow = service.trendingShow?.results?.[0];
-              return (
-                <StreamingServiceCard
-                  key={service.providerId}
-                  name={service.name}
-                  logo={service.logo}
-                  gradientFrom={service.gradientFrom}
-                  gradientTo={service.gradientTo}
-                  providerId={service.providerId}
-                  featuredShowImage={featuredShow?.backdrop_path ? 
-                    getImageUrl(featuredShow.backdrop_path, 'w1280') : 
-                    ''}
-                  featuredShowTitle={featuredShow?.name || featuredShow?.title || ''}
-                />
-              );
-            })}
-          </div>
-        </section>
-      </div>
-    </main>
+    <HomePage
+      trendingMovies={trendingMovies}
+      trendingTVShows={trendingTVShows}
+      featuredMovie={featuredMovie}
+      trailer={trailer}
+      streamingServicesWithShows={streamingServicesWithShows}
+    />
   );
 }
-
-export default Home;
