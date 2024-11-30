@@ -34,34 +34,18 @@ export const clearMediaStatusCache = (mediaType: string, mediaId: number) => {
   mediaStatusCache.delete(`${mediaType}-${mediaId}`);
 };
 
-export async function getMediaStatus(mediaType: string, mediaId: number): Promise<MediaStatus> {
-  // Vérifier d'abord dans le cache
-  const cacheKey = `${mediaType}-${mediaId}`;
-  const cachedStatus = mediaStatusCache.get(cacheKey);
-  
-  if (cachedStatus !== undefined) {
-    return { status: cachedStatus, mediaId, mediaType };
-  }
-
+export async function getMediaStatus(mediaType: string, mediaId: number) {
   try {
     const response = await fetch(`/api/overseerr/status?mediaType=${mediaType}&mediaId=${mediaId}`);
-    const data = await response.json();
-
+    
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to get media status');
+      throw new Error('Failed to get media status');
     }
 
-    // Stocker le statut dans le cache
-    mediaStatusCache.set(cacheKey, data.status);
-
-    return data;
+    return await response.json();
   } catch (error) {
     console.error('Error getting media status:', error);
-    return {
-      status: MEDIA_STATUS.UNKNOWN,
-      mediaId,
-      mediaType
-    };
+    throw error;
   }
 }
 
