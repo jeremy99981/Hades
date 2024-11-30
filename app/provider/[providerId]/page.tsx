@@ -1,12 +1,15 @@
 'use client';
 
-import { getProviderContent, getImageUrl } from '@/app/lib/tmdb';
+import { getImageUrl, clientApi } from '@/app/lib/tmdb';
 import Image from 'next/image';
 import Link from 'next/link';
 import { PlayIcon, PlusIcon } from '@heroicons/react/24/solid';
 import { useState, useEffect } from 'react';
 import MediaRow from '@/app/components/MediaRow';
 import BackButton from '@/app/components/BackButton';
+import HeartIcon from '@/app/components/icons/HeartIcon';
+import HeartIconSolid from '@/app/components/icons/HeartIconSolid';
+import OverseerrStatus from '@/app/components/OverseerrStatus';
 
 interface Media {
   id: number;
@@ -51,7 +54,7 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
     const fetchContent = async () => {
       setLoading(true);
       try {
-        const data = await getProviderContent(Number(params.providerId));
+        const data = await clientApi.getProviderContent(Number(params.providerId));
         const movies = data.filter((item: Media) => item.media_type === 'movie');
         const tvShows = data.filter((item: Media) => item.media_type === 'tv');
         setContent([...movies, ...tvShows]);
@@ -93,55 +96,79 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
   const movies = content.filter((item) => item.media_type === 'movie');
   const tvShows = content.filter((item) => item.media_type === 'tv');
 
-  const MediaCard = ({ item }: { item: Media }) => (
-    <div
-      className="relative p-[2px] rounded-[10px] overflow-hidden group/item flex-shrink-0"
-      style={{ width: '240px' }}
-    >
-      <Link
-        href={`/${item.media_type}/${item.id}`}
-        className="relative overflow-hidden rounded-[10px] transition-transform duration-300 ease-out group-hover/item:scale-[1.02] aspect-[2/3] block"
+  const MediaCard = ({ item }: { item: Media }) => {
+    const [isLiked, setIsLiked] = useState(false);
+    
+    return (
+      <div
+        className="relative p-[2px] rounded-[10px] overflow-hidden group/item flex-shrink-0"
+        style={{ width: '250px' }}
       >
-        <Image
-          src={getImageUrl(item.poster_path)}
-          alt={item.title || item.name || ''}
-          fill
-          className="object-cover"
-          sizes="240px"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-0 transition-opacity duration-300 group-hover/item:opacity-100">
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <div className="flex items-center space-x-2 text-[13px] text-white/90">
-              <span className="flex items-center">
-                <span className="text-yellow-400 mr-1">★</span>
-                {item.vote_average?.toFixed(1)}
-              </span>
-              <span>•</span>
-              <span>{new Date(item.release_date || item.first_air_date || '').getFullYear()}</span>
+        <OverseerrStatus mediaType={item.media_type} mediaId={item.id} />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+        <div className="relative rounded-[10px] overflow-hidden">
+          <Link href={`/${item.media_type}/${item.id}`}>
+            <Image
+              src={getImageUrl(item.poster_path)}
+              alt={item.title || item.name || ''}
+              width={250}
+              height={375}
+              sizes="250px"
+              quality={90}
+              priority
+              className="object-cover aspect-[2/3]"
+            />
+
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent opacity-0 transition-opacity duration-300 group-hover/item:opacity-100">
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="flex items-center space-x-2 text-[13px] text-white/90">
+                  <span className="flex items-center">
+                    <span className="text-yellow-400 mr-1">★</span>
+                    {item.vote_average?.toFixed(1)}
+                  </span>
+                  <span>•</span>
+                  <span>
+                    {new Date(
+                      item.release_date || item.first_air_date || ''
+                    ).getFullYear()}
+                  </span>
+                </div>
+
+                <h3 className="font-semibold text-xl leading-tight text-white mt-2">
+                  {item.title || item.name}
+                </h3>
+
+                <p className="mt-2 text-sm text-white/75 line-clamp-3">
+                  {item.overview}
+                </p>
+              </div>
             </div>
-            <h3 className="font-semibold text-lg leading-tight text-white mt-2">
-              {item.title || item.name}
-            </h3>
-            <div className="flex items-center gap-2 mt-3">
-              <Link
-                href={`/${item.media_type}/${item.id}`}
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-white rounded text-black text-sm font-medium transition-colors duration-200"
-              >
-                <PlayIcon className="w-3.5 h-3.5" />
-                Lecture
-              </Link>
-              <button 
-                className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-800/75 hover:bg-gray-800/90 rounded text-white text-sm font-medium transition-colors duration-200 whitespace-nowrap"
-              >
-                <PlusIcon className="w-3.5 h-3.5" />
-                Ma Liste
-              </button>
-            </div>
-          </div>
+          </Link>
         </div>
-      </Link>
-    </div>
-  );
+
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsLiked(!isLiked);
+          }}
+          className="group/like absolute top-3 right-3 p-2 rounded-full bg-black/30 backdrop-blur-sm opacity-0 group-hover/item:opacity-100 
+                     transition-all duration-300 ease-in-out hover:bg-black/50"
+        >
+          <div className="relative">
+            <HeartIconSolid 
+              className={`w-5 h-5 absolute inset-0 text-red-500 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                         scale-0 group-hover/like:scale-100 ${isLiked && 'scale-100'}`}
+            />
+            <HeartIcon 
+              className={`w-5 h-5 text-white transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                         scale-100 group-hover/like:scale-0 ${isLiked && 'scale-0'}`}
+            />
+          </div>
+        </button>
+      </div>
+    );
+  };
 
   return (
     <main className="min-h-screen bg-[#141414] text-white">
@@ -181,13 +208,13 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
 
       {/* Content Rows */}
       <div className="relative z-10 -mt-32 pt-36 space-y-12 pb-12">
-        <MediaRow title="Films" itemWidth={240}>
+        <MediaRow title="Films" itemWidth={250}>
           {movies.map((item) => (
             <MediaCard key={item.id} item={item} />
           ))}
         </MediaRow>
 
-        <MediaRow title="Séries" itemWidth={240}>
+        <MediaRow title="Séries" itemWidth={250}>
           {tvShows.map((item) => (
             <MediaCard key={item.id} item={item} />
           ))}

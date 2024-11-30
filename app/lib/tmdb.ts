@@ -276,6 +276,13 @@ export const clientApi = {
     return response.json();
   },
 
+  async getProviderContent(providerId: number) {
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/tmdb/provider?providerId=${providerId}`);
+    if (!response.ok) throw new Error('Failed to fetch provider content');
+    return response.json();
+  },
+
   async getSeasonDetails(showId: number, seasonNumber: number) {
     const baseUrl = getBaseUrl();
     const response = await fetch(`${baseUrl}/api/tmdb/season?showId=${showId}&seasonNumber=${seasonNumber}`);
