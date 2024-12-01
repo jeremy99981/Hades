@@ -7,10 +7,10 @@ import SearchBar from './SearchBar';
 import AuthModal from './modals/AuthModal';
 import { useAuth } from '../hooks/useAuth.tsx';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronDownIcon, 
-  Bars3Icon, 
-  XMarkIcon, 
+import {
+  ChevronDownIcon,
+  Bars3Icon,
+  XMarkIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
   Cog6ToothIcon,
@@ -30,7 +30,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
+      if (window.scrollY > 0) {
         setIsScrolled(true);
       } else {
         setIsScrolled(false);
@@ -49,17 +49,18 @@ const Navbar = () => {
   ];
 
   return (
-    <nav 
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500
-        ${isScrolled 
-          ? 'bg-[#1a1a1a]/80 backdrop-blur-2xl border-b border-white/[0.05] shadow-sm shadow-black/5' 
-          : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent'}`}
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-500
+  ${isScrolled
+          ? 'bg-[#1a1a1a]/80 shadow-sm shadow-black/5'
+          : 'bg-gradient-to-b from-black/80 via-black/40 to-transparent border-b-0'}`}
+
     >
       <div className="max-w-7xl mx-auto">
         <div className="h-16 px-6 flex items-center justify-between">
           {/* Logo */}
-          <Link 
-            href="/" 
+          <Link
+            href="/"
             className="text-lg font-light tracking-widest text-white/90 hover:text-white transition-colors"
           >
             HADES
@@ -85,14 +86,14 @@ const Navbar = () => {
           {/* Actions */}
           <div className="flex items-center gap-3">
             <SearchBar />
-            
+
             {isAuthenticated ? (
               <button
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="p-2 rounded-full hover:bg-white/[0.05] active:bg-white/[0.1] transition-colors relative group"
               >
                 <UserCircleIcon className="w-5 h-5 text-white/80 group-hover:text-white" />
-                
+
                 {/* Menu déroulant du compte */}
                 <AnimatePresence>
                   {isUserMenuOpen && (
@@ -100,31 +101,31 @@ const Navbar = () => {
                       initial={{ opacity: 0, y: 8, scale: 0.96 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                      className="absolute right-0 mt-2 w-64 rounded-xl bg-[#1a1a1a]/90 backdrop-blur-2xl 
+                      className="absolute right-0 mt-2 w-64 rounded-xl bg-[#1a1a1a]/90 backdrop-blur-2xl
                         shadow-xl shadow-black/10 ring-1 ring-white/10 overflow-hidden"
                     >
                       <div className="px-4 py-3 border-b border-white/[0.06]">
                         <p className="text-sm font-medium text-white/90">{user?.username}</p>
                         <p className="text-xs text-white/50 truncate mt-0.5">{user?.email}</p>
                       </div>
-                      
+
                       <div className="p-1">
                         <Link
                           href="/profile"
-                          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-white/70 
+                          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-white/70
                             hover:text-white hover:bg-white/[0.06] transition-colors"
                           onClick={() => setIsUserMenuOpen(false)}
                         >
                           <Cog6ToothIcon className="w-4 h-4" />
                           Paramètres
                         </Link>
-                        
+
                         <button
                           onClick={() => {
                             logout();
                             setIsUserMenuOpen(false);
                           }}
-                          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-white/70 
+                          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm text-white/70
                             hover:text-white hover:bg-white/[0.06] transition-colors"
                         >
                           <ArrowRightOnRectangleIcon className="w-4 h-4" />
@@ -138,7 +139,7 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => setIsAuthModalOpen(true)}
-                className="px-4 py-1.5 rounded-full text-sm font-medium text-white 
+                className="px-4 py-1.5 rounded-full text-sm font-medium text-white
                   bg-white/10 hover:bg-white/[0.15] active:bg-white/[0.1] backdrop-blur-xl
                   transition-all shadow-sm shadow-black/5"
               >
