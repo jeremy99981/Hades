@@ -1,3 +1,5 @@
+'use client';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
@@ -11,26 +13,28 @@ interface MediaCardProps {
     title?: string;
     name?: string;
     poster_path: string;
-    media_type: string;
+    media_type?: string;
     overview: string;
     vote_average: number;
     release_date?: string;
     first_air_date?: string;
   };
+  forcedMediaType?: 'movie' | 'tv';
 }
 
-export default function MediaCard({ item }: MediaCardProps) {
+export default function MediaCard({ item, forcedMediaType }: MediaCardProps) {
   const [isLiked, setIsLiked] = useState(false);
+  const mediaType = forcedMediaType || item.media_type || (item.title ? 'movie' : 'tv');
 
   return (
     <div
       className="relative p-[2px] rounded-[10px] overflow-hidden group/item flex-shrink-0"
       style={{ width: '250px' }}
     >
-      <OverseerrStatus mediaType={item.media_type} mediaId={item.id} />
+      <OverseerrStatus mediaType={mediaType} mediaId={item.id} />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
       <div className="relative rounded-[10px] overflow-hidden">
-        <Link href={`/${item.media_type}/${item.id}`}>
+        <Link href={`/${mediaType}/${item.id}`}>
           <Image
             src={`https://image.tmdb.org/t/p/w500${item.poster_path}`}
             alt={item.title || item.name || ''}
@@ -75,17 +79,18 @@ export default function MediaCard({ item }: MediaCardProps) {
           e.stopPropagation();
           setIsLiked(!isLiked);
         }}
-        className="group/like absolute top-3 right-3 p-2 rounded-full bg-black/30 backdrop-blur-sm opacity-0 group-hover/item:opacity-100 
-                   transition-all duration-300 ease-in-out hover:bg-black/50"
+        className={`group/like absolute top-3 right-3 p-2 rounded-full backdrop-blur-sm opacity-0 group-hover/item:opacity-100 
+                   transition-all duration-300 ease-in-out hover:bg-black/50
+                   ${isLiked ? 'bg-black/30' : 'bg-black/30'}`}
       >
         <div className="relative">
           <HeartIconSolid 
-            className={`w-5 h-5 absolute inset-0 text-red-500 transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                       scale-0 group-hover/like:scale-100 ${isLiked && 'scale-100'}`}
+            className={`w-5 h-5 absolute inset-0 text-red-500 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                       scale-0 group-hover/like:scale-100 ${isLiked ? 'scale-100' : ''}`}
           />
           <HeartIcon 
-            className={`w-5 h-5 text-white transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
-                       scale-100 group-hover/like:scale-0 ${isLiked && 'scale-0'}`}
+            className={`w-5 h-5 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                       ${isLiked ? 'scale-0 text-white' : 'scale-100 text-white group-hover/like:scale-0'}`}
           />
         </div>
       </button>

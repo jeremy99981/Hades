@@ -58,17 +58,17 @@ const EpisodeDetailModal = ({ isOpen, onClose, episode }: EpisodeDetailModalProp
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-center justify-center px-4 ${
+      className={`fixed inset-0 z-50 flex items-start justify-center px-4 pt-20 ${
         isClosing ? 'animate-fadeOut' : 'animate-fadeIn'
       }`}
       onClick={handleClose}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+      <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />
 
       {/* Modal Content */}
       <div
-        className={`relative w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-2xl bg-[#1a1a1a] shadow-2xl ${
+        className={`relative w-full max-w-6xl max-h-[85vh] overflow-y-auto rounded-2xl bg-[#1a1a1a] shadow-2xl ${
           isClosing ? 'animate-slideOut' : 'animate-slideIn'
         }`}
         onClick={e => e.stopPropagation()}

@@ -16,15 +16,21 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cnbl-cdn.bamgrid.com',
+        hostname: 'press.hulu.com',
       },
       {
         protocol: 'https',
-        hostname: 'press.hulu.com',
+        hostname: 'www.themoviedb.org',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cnbl-cdn.bamgrid.com',
       },
     ],
   },
-  reactStrictMode: true,
-}
+  experimental: {
+    optimizePackageImports: ['@heroicons/react'],
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

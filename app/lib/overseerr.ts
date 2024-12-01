@@ -21,12 +21,12 @@ interface MediaStatus {
 
 // Statuts possibles d'Overseerr
 export const MEDIA_STATUS = {
-  UNKNOWN: 1,        // Statut inconnu
+  UNKNOWN: 6,        // Remplacer UNKNOWN par NOT_AVAILABLE
   PENDING: 2,        // En attente
   PROCESSING: 3,     // En cours de traitement
   PARTIALLY_AVAILABLE: 4, // Partiellement disponible
   AVAILABLE: 5,      // Disponible
-  NOT_AVAILABLE: 6,  // Non disponible
+  NOT_AVAILABLE: 6,  // Non disponible / Peut être demandé
 } as const;
 
 // Cache pour stocker les statuts des médias
@@ -87,6 +87,28 @@ export async function checkMediaStatus(mediaId: number) {
     return data;
   } catch (error) {
     console.error('Error checking media status:', error);
+    throw error;
+  }
+}
+
+export async function cancelRequest(requestId: number) {
+  try {
+    const response = await fetch('/api/overseerr/request/cancel', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ requestId }),
+    });
+
+    if (!response.ok) {
+      const data = await response.json();
+      throw new Error(data.error || `Failed to cancel request`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error cancelling request:', error);
     throw error;
   }
 }

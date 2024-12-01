@@ -19,7 +19,7 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export function AuthProvider(props: AuthProviderProps) {
+export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<any>(null);
 
@@ -125,17 +125,19 @@ export function AuthProvider(props: AuthProviderProps) {
     setUser(null);
   };
 
-  return {
-    Provider: AuthContext.Provider,
-    value: {
-      isAuthenticated,
-      user,
-      login,
-      register,
-      logout
-    },
-    children: props.children
-  };
+  return (
+    <AuthContext.Provider 
+      value={{
+        isAuthenticated,
+        user,
+        login,
+        register,
+        logout
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

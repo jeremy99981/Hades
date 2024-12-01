@@ -19,11 +19,17 @@ export default function OverseerrStatus({ mediaType, mediaId, className = '' }: 
         setStatus(response.status);
       } catch (error) {
         console.error('Error checking media status:', error);
+        setStatus(MEDIA_STATUS.NOT_AVAILABLE);
       }
     }
 
     checkStatus();
   }, [mediaType, mediaId]);
+
+  // Ne pas afficher la pastille si le média n'est pas disponible
+  if (status === MEDIA_STATUS.NOT_AVAILABLE || status === MEDIA_STATUS.UNKNOWN) {
+    return null;
+  }
 
   const getStatusColor = () => {
     switch (status) {
@@ -34,10 +40,8 @@ export default function OverseerrStatus({ mediaType, mediaId, className = '' }: 
       case MEDIA_STATUS.PENDING:
       case MEDIA_STATUS.PROCESSING:
         return 'bg-blue-500/80';
-      case MEDIA_STATUS.NOT_AVAILABLE:
-        return 'bg-red-500/80';
       default:
-        return 'bg-gray-500/80';
+        return 'bg-blue-500/80';
     }
   };
 
@@ -48,13 +52,10 @@ export default function OverseerrStatus({ mediaType, mediaId, className = '' }: 
       case MEDIA_STATUS.PARTIALLY_AVAILABLE:
         return 'Partiellement disponible';
       case MEDIA_STATUS.PENDING:
-        return 'En attente';
       case MEDIA_STATUS.PROCESSING:
-        return 'En cours';
-      case MEDIA_STATUS.NOT_AVAILABLE:
         return 'Demander';
       default:
-        return 'Inconnu';
+        return 'Demander';
     }
   };
 

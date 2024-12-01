@@ -1,7 +1,6 @@
 'use client';
 
 import { useRef, useState, useEffect } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface MediaRowProps {
   title: string;
@@ -18,8 +17,15 @@ const MediaRow = ({ title, children, itemWidth }: MediaRowProps) => {
     const container = scrollContainerRef.current;
     if (!container) return;
 
-    const scrollAmount = direction === 'left' ? -itemWidth * 2 : itemWidth * 2;
-    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    const scrollAmount = container.clientWidth - 100;
+    const newScrollLeft = direction === 'left'
+      ? container.scrollLeft - scrollAmount
+      : container.scrollLeft + scrollAmount;
+
+    container.scrollTo({
+      left: newScrollLeft,
+      behavior: 'smooth'
+    });
   };
 
   const checkArrows = () => {
@@ -36,50 +42,55 @@ const MediaRow = ({ title, children, itemWidth }: MediaRowProps) => {
     const container = scrollContainerRef.current;
     if (container) {
       container.addEventListener('scroll', checkArrows);
-      // Check initially
       checkArrows();
+      window.addEventListener('load', checkArrows);
+      window.addEventListener('resize', checkArrows);
     }
 
     return () => {
       if (container) {
         container.removeEventListener('scroll', checkArrows);
+        window.removeEventListener('load', checkArrows);
+        window.removeEventListener('resize', checkArrows);
       }
     };
   }, []);
 
   return (
-    <section className="w-full relative group">
-      <div className="px-8 mb-4 flex items-center justify-between">
-        <h2 className="text-[22px] font-medium">{title}</h2>
-        <div className="flex items-center gap-2">
+    <section className="w-full relative px-8 mt-8">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold text-white">{title}</h2>
+        <div className="flex items-center gap-4">
           <button
             onClick={() => scroll('left')}
-            className={`p-1 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-sm transition-all duration-200 ${
-              !showLeftArrow && 'opacity-50 cursor-not-allowed'
+            className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors ${
+              !showLeftArrow && 'opacity-50 cursor-not-allowed hover:bg-white/10'
             }`}
             disabled={!showLeftArrow}
           >
-            <ChevronLeftIcon className="w-5 h-5 text-white" />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
           </button>
           <button
             onClick={() => scroll('right')}
-            className={`p-1 rounded-full bg-black/50 hover:bg-black/75 backdrop-blur-sm transition-all duration-200 ${
-              !showRightArrow && 'opacity-50 cursor-not-allowed'
+            className={`p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors ${
+              !showRightArrow && 'opacity-50 cursor-not-allowed hover:bg-white/10'
             }`}
             disabled={!showRightArrow}
           >
-            <ChevronRightIcon className="w-5 h-5 text-white" />
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
           </button>
         </div>
       </div>
-      <div className="relative">
-        <div
-          ref={scrollContainerRef}
-          className="flex gap-4 overflow-x-scroll pl-8 scrollbar-hide"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
-          {children}
-        </div>
+
+      <div
+        ref={scrollContainerRef}
+        className="flex gap-4 overflow-x-auto scroll-smooth pb-4 no-scrollbar"
+      >
+        {children}
       </div>
     </section>
   );

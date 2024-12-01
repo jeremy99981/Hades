@@ -2,7 +2,6 @@
 
 import { ReactNode } from 'react';
 import Navbar from './components/Navbar';
-import { AuthProvider } from './providers/AuthProvider';
 import { Toaster } from 'react-hot-toast';
 
 interface ClientLayoutProps {
@@ -11,7 +10,7 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
-    <AuthProvider>
+    <>
       <Navbar />
       {children}
       <Toaster 
@@ -22,21 +21,10 @@ export default function ClientLayout({ children }: ClientLayoutProps) {
             background: '#1a1a1a',
             color: '#fff',
             borderRadius: '8px',
-          },
-          success: {
-            iconTheme: {
-              primary: '#10B981',
-              secondary: '#fff',
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: '#EF4444',
-              secondary: '#fff',
-            },
+            border: '1px solid rgba(255, 255, 255, 0.1)',
           },
         }}
       />
-    </AuthProvider>
+    </>
   );
 }

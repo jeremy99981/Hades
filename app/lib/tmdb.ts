@@ -349,6 +349,16 @@ export async function getMediaDetails(mediaType: string, id: string): Promise<Me
   return mediaDetailsSchema.parse(response.data);
 }
 
+export async function getRecommendations(mediaType: 'movie' | 'tv', id: number): Promise<TMDBResponse> {
+  const response = await tmdbApi.get(`/${mediaType}/${id}/recommendations`);
+  const data = response.data;
+  
+  // Filter out items without posters
+  data.results = data.results.filter((item: any) => item.poster_path);
+  
+  return tmdbResponseSchema.parse(data);
+}
+
 // Fonction utilitaire pour obtenir l'URL complète
 function getBaseUrl() {
   if (typeof window !== 'undefined') {
@@ -397,6 +407,16 @@ export const clientApi = {
       params: { query }
     });
     return tmdbResponseSchema.parse(response.data);
+  },
+
+  async getRecommendations(mediaType: 'movie' | 'tv', id: string): Promise<TMDBResponse> {
+    return fetch(`${getBaseUrl()}/api/${mediaType}/${id}/recommendations`)
+      .then(res => res.json())
+      .then(data => {
+        // Filter out items without posters
+        data.results = data.results.filter((item: any) => item.poster_path);
+        return tmdbResponseSchema.parse(data);
+      });
   }
 };
 

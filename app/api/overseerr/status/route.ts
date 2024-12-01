@@ -35,6 +35,7 @@ export async function GET(request: Request) {
     }
 
     const mediaInfo = await response.json();
+    console.log('Media Info from Overseerr:', mediaInfo);
 
     // Vérifier s'il y a des demandes en cours pour ce média
     const requestsResponse = await fetch(
@@ -51,6 +52,7 @@ export async function GET(request: Request) {
     }
 
     const requestsData = await requestsResponse.json();
+    console.log('Requests Data from Overseerr:', requestsData);
 
     // Trouver une demande en cours pour ce média
     const pendingRequest = requestsData.results.find(
@@ -61,24 +63,23 @@ export async function GET(request: Request) {
     );
 
     // Déterminer le statut du média
-    let status = 1; // UNKNOWN par défaut
-    if (mediaInfo.mediaInfo) {
-      if (mediaInfo.mediaInfo.status === 5) {
-        status = 5; // AVAILABLE
-      } else if (mediaInfo.mediaInfo.status === 3) {
-        status = 3; // PROCESSING
-      } else if (pendingRequest) {
-        status = 2; // PENDING
-      } else {
-        status = 6; // NOT_AVAILABLE
-      }
+    let status;
+
+    if (mediaInfo.mediaInfo?.status === 5) {
+      status = 5; // AVAILABLE
+    } else if (mediaInfo.mediaInfo?.status === 3) {
+      status = 3; // PROCESSING
+    } else if (pendingRequest) {
+      status = 2; // PENDING
+    } else {
+      status = 6; // NOT_AVAILABLE - Le média peut être demandé
     }
 
     return NextResponse.json({
       status,
       mediaId: Number(mediaId),
       mediaType,
-      requestId: pendingRequest?.id,
+      requestId: pendingRequest?.id
     });
   } catch (error) {
     return NextResponse.json(

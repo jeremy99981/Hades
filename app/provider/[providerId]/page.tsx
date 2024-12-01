@@ -176,7 +176,7 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
 
       {/* Hero Section */}
       {selectedItem && (
-        <div className="relative h-screen w-full">
+        <div className="relative h-[100svh] w-full">
           <div className="absolute inset-0">
             <Image
               src={getImageUrl(selectedItem.backdrop_path, 'original')}
@@ -184,9 +184,12 @@ function ProviderContent({ params }: { params: { providerId: string } }) {
               fill
               className="object-cover"
               priority
+              quality={90}
+              sizes="(max-width: 768px) 200vw, 100vw"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#141414] via-black/50 to-transparent" />
           </div>
+
           <div className="absolute bottom-0 left-0 right-0 p-8 space-y-6">
             <h1 className="text-[80px] font-bold text-white leading-none tracking-tight drop-shadow-lg">
               {providerName}

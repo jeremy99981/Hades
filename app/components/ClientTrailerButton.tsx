@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PlayIcon } from '@heroicons/react/24/solid';
+import { PlayCircleIcon } from '@heroicons/react/24/solid';
 import dynamic from 'next/dynamic';
 
 const VideoModal = dynamic(() => import('./VideoModal'), {
@@ -22,19 +22,26 @@ interface ClientTrailerButtonProps {
 export default function ClientTrailerButton({ trailerKey, title, year }: ClientTrailerButtonProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  const handleClick = () => trailerKey && setIsModalOpen(true);
+
   return (
     <>
       <button
-        onClick={() => trailerKey && setIsModalOpen(true)}
+        onClick={handleClick}
         disabled={!trailerKey}
-        className={`flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-colors ${
-          trailerKey 
-            ? 'bg-white text-black hover:bg-white/90' 
-            : 'bg-white/10 text-white/50 cursor-not-allowed'
-        }`}
+        className={`h-12 inline-flex items-center space-x-2 px-6 rounded-full
+                   bg-white/10 hover:bg-white/15 backdrop-blur-md
+                   transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]
+                   disabled:opacity-50 disabled:cursor-not-allowed
+                   group relative overflow-hidden`}
       >
-        <PlayIcon className="w-6 h-6" />
-        {trailerKey ? 'Bande annonce' : 'Bande annonce non disponible'}
+        <div className="relative z-10 flex items-center space-x-2">
+          <PlayCircleIcon className="w-5 h-5 text-white" />
+          <span className="text-sm font-medium text-white">
+            {trailerKey ? 'Bande annonce' : 'Bande annonce non disponible'}
+          </span>
+        </div>
+        <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-10 transition-opacity duration-300" />
       </button>
 
       {isModalOpen && trailerKey && (
